@@ -1,0 +1,60 @@
+{
+  "name": "CryptoFlow Pro - Trading & Mining",
+  "short_name": "CryptoFlow",
+  "description": "Plataforma de trading de criptomonedas con análisis técnico, alertas en tiempo real, simulador y vigilante automático.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "lang": "es-SV",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hoy",
+      "short_name": "Hoy",
+      "description": "Recomendaciones de hoy",
+      "url": "./?tab=today"
+    },
+    {
+      "name": "Vigilante",
+      "short_name": "Vigilante",
+      "description": "Activar vigilancia automática",
+      "url": "./?tab=today&watchdog=on"
+    },
+    {
+      "name": "Simulador",
+      "short_name": "Simular",
+      "description": "Practicar con paper trading",
+      "url": "./?tab=simular"
+    }
+  ]
+}
