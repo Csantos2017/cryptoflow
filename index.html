@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CryptoFlow">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="CryptoFlow">
+<meta name="description" content="Plataforma de trading y minería de criptomonedas con análisis técnico, alertas, simulador y vigilante automático.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>CryptoFlow · Datos reales en vivo</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -514,10 +523,16 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
     </div>
 
     <!-- Footer actions -->
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-2 gap-2 mb-2">
       <button onclick="changeSimExchange()" class="btn-secondary py-2.5 rounded-xl text-[11px] font-bold">⚙️ Cambiar exchange</button>
       <button onclick="confirmResetSim()" class="btn-secondary py-2.5 rounded-xl text-[11px] font-bold text-red-400">🔄 Reiniciar todo</button>
     </div>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="exportAllData()" class="btn-secondary py-2 rounded-xl text-[10px] font-bold">📤 Exportar datos</button>
+      <button onclick="importAllData()" class="btn-secondary py-2 rounded-xl text-[10px] font-bold">📥 Importar datos</button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json" class="hidden">
+    <p class="text-[10px] text-slate-500 mt-2 text-center leading-relaxed">💡 Exporta antes de cambiar de celular o limpiar caché del navegador para no perder tu progreso.</p>
   </div>
 </section>
 
@@ -1117,9 +1132,37 @@ async function fetchWithRetry(url, retries = 3) {
 }
 
 async function loadStorage(key, defaultValue) {
-  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : defaultValue; } catch { return defaultValue; }
+  // 1) Intentar localStorage primero (funciona en navegador real, GitHub Pages, Vercel)
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) return JSON.parse(raw);
+  } catch (e) { console.warn('localStorage read err', e); }
+  // 2) Fallback a window.storage (solo funciona en preview de Claude)
+  try {
+    if (window.storage?.get) {
+      const r = await window.storage.get(key);
+      return r ? JSON.parse(r.value) : defaultValue;
+    }
+  } catch {}
+  return defaultValue;
 }
-async function saveStorage(key, value) { try { await window.storage.set(key, JSON.stringify(value)); } catch (e) {} }
+
+async function saveStorage(key, value) {
+  // Guardar en AMBOS para máxima compatibilidad
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('localStorage write err (probable falta de espacio):', e);
+    // Si localStorage falla por cuota, intentar limpiar caché y reintentar
+    try {
+      localStorage.removeItem('cf_cache_market');
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e2) {}
+  }
+  try {
+    if (window.storage?.set) await window.storage.set(key, JSON.stringify(value));
+  } catch {}
+}
 
 // =================== TABS ===================
 function switchTab(name) {
@@ -1608,7 +1651,12 @@ async function loadMarket() {
     state.coins = data;
 
     // Guardar en caché persistente
-    try { await window.storage.set('cf_cache_market', JSON.stringify({ data, timestamp: Date.now() })); } catch (e) {}
+    try {
+      const cacheData = JSON.stringify({ data, timestamp: Date.now() });
+      localStorage.setItem('cf_cache_market', cacheData);
+    } catch (e) {
+      console.warn('Cache write failed:', e);
+    }
 
     renderMarket();
     populateSelectors();
@@ -1626,9 +1674,9 @@ async function loadMarket() {
     // Si no tenemos datos en memoria, intenta cargar de caché persistente
     if (state.coins.length === 0) {
       try {
-        const cachedRaw = await window.storage.get('cf_cache_market');
+        const cachedRaw = localStorage.getItem('cf_cache_market');
         if (cachedRaw) {
-          const { data, timestamp } = JSON.parse(cachedRaw.value);
+          const { data, timestamp } = JSON.parse(cachedRaw);
           const ageMin = Math.floor((Date.now() - timestamp) / 60000);
           state.coins = data;
           renderMarket();
@@ -3644,6 +3692,71 @@ async function executeSimSell(coinId) {
   }
 }
 
+// =================== EXPORTAR / IMPORTAR DATOS ===================
+function exportAllData() {
+  vibrate(15);
+  try {
+    const allData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      cf_alerts: state.alerts,
+      cf_watchlist: state.watchlist,
+      cf_trades: state.trades,
+      cf_open_ops: state.openOps,
+      cf_sim: state.sim,
+      cf_watchdog: { sensitivity: watchdog.sensitivity, soundOn: watchdog.soundOn, vibrateOn: watchdog.vibrateOn, alertsLog: watchdog.alertsLog }
+    };
+    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `cryptoflow-backup-${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('💾 Backup descargado. Guárdalo en lugar seguro.', 'success', 5000);
+  } catch (e) {
+    console.error('Export error:', e);
+    toast('Error al exportar', 'error');
+  }
+}
+
+function importAllData() {
+  const input = $('importFileInput');
+  input.onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!confirm('⚠️ Importar reemplazará TODOS tus datos actuales (alertas, simulador, journal, etc). ¿Continuar?')) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.version) { toast('Archivo no válido', 'error'); return; }
+
+      // Restaurar todo
+      if (data.cf_alerts) { state.alerts = data.cf_alerts; await saveStorage('cf_alerts', state.alerts); }
+      if (data.cf_watchlist) { state.watchlist = data.cf_watchlist; await saveStorage('cf_watchlist', state.watchlist); }
+      if (data.cf_trades) { state.trades = data.cf_trades; await saveStorage('cf_trades', state.trades); }
+      if (data.cf_open_ops) { state.openOps = data.cf_open_ops; await saveStorage('cf_open_ops', state.openOps); }
+      if (data.cf_sim) { state.sim = data.cf_sim; await saveStorage('cf_sim', state.sim); }
+      if (data.cf_watchdog) {
+        Object.assign(watchdog, data.cf_watchdog);
+        await saveWatchdog();
+      }
+
+      vibrate([100, 50, 100]);
+      toast('✅ Datos restaurados correctamente. Recargando...', 'success', 3000);
+      setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+      console.error('Import error:', e);
+      toast('Error: archivo corrupto o no válido', 'error');
+    }
+    input.value = '';
+  };
+  input.click();
+}
+
 // =================== INIT ===================
 function updateClock() { $('liveClock').textContent = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
 
@@ -3663,9 +3776,9 @@ async function init() {
 
   // Cargar datos de caché inmediatamente para UX rápido (antes de conexión)
   try {
-    const cachedRaw = await window.storage.get('cf_cache_market');
+    const cachedRaw = localStorage.getItem('cf_cache_market');
     if (cachedRaw) {
-      const { data, timestamp } = JSON.parse(cachedRaw.value);
+      const { data, timestamp } = JSON.parse(cachedRaw);
       const ageMin = Math.floor((Date.now() - timestamp) / 60000);
       if (ageMin < 60 * 24) { // Solo si tiene menos de 24h
         state.coins = data;
@@ -3689,6 +3802,82 @@ window.addEventListener('online', () => { setOnlineStatus(true); refreshAll(); }
 window.addEventListener('offline', () => setOnlineStatus(false));
 
 init().catch(e => { console.error('Init error', e); toast('Error al iniciar', 'error'); });
+
+// =================== PWA: SERVICE WORKER + INSTALAR ===================
+let deferredPrompt = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      console.log('✓ Service Worker registrado');
+      // Verificar actualizaciones cada 30 minutos
+      setInterval(() => reg.update(), 30 * 60 * 1000);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // Hay actualización disponible
+            const update = document.createElement('div');
+            update.className = 'fixed bottom-4 left-2 right-2 z-50 bg-amber-500 text-slate-950 p-3 rounded-xl shadow-2xl flex items-center justify-between gap-2 fade-in';
+            update.innerHTML = '<p class="text-xs font-bold flex-1">🆕 Nueva versión disponible</p><button onclick="location.reload()" class="bg-slate-950 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Actualizar</button>';
+            document.body.appendChild(update);
+          }
+        });
+      });
+    }).catch(err => console.warn('SW registro falló:', err));
+  });
+}
+
+// Capturar evento de instalación PWA
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar botón flotante de instalar
+  showInstallBanner();
+});
+
+function showInstallBanner() {
+  if (localStorage.getItem('cf_install_dismissed')) return;
+  if (document.getElementById('installBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.className = 'fixed bottom-4 left-2 right-2 z-50 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 p-3 rounded-2xl shadow-2xl flex items-center gap-2.5 fade-in';
+  banner.innerHTML = `
+    <div class="text-2xl">📱</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-xs font-black">Instalar CryptoFlow</p>
+      <p class="text-[10px] opacity-80">Funciona como app nativa, sin Chrome</p>
+    </div>
+    <button onclick="installApp()" class="bg-slate-950 text-white px-3 py-2 rounded-lg text-xs font-bold flex-shrink-0">Instalar</button>
+    <button onclick="dismissInstall()" class="text-slate-950 text-xl leading-none w-7 h-7 flex items-center justify-center flex-shrink-0">×</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function installApp() {
+  if (!deferredPrompt) {
+    toast('Tu navegador instalará automáticamente. Revisa el menú ⋮ → "Añadir a inicio"', 'info', 5000);
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    toast('🎉 ¡App instalada! Búscala en tu pantalla de inicio', 'success', 5000);
+  }
+  deferredPrompt = null;
+  document.getElementById('installBanner')?.remove();
+}
+
+function dismissInstall() {
+  localStorage.setItem('cf_install_dismissed', '1');
+  document.getElementById('installBanner')?.remove();
+}
+
+window.addEventListener('appinstalled', () => {
+  toast('✅ CryptoFlow instalado correctamente', 'success', 5000);
+  document.getElementById('installBanner')?.remove();
+});
 </script>
 </body>
 </html>
