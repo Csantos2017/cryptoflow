@@ -180,6 +180,7 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
     <button onclick="switchTab('today')" data-tab="today" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition tab-active">🎯 HOY</button>
     <button onclick="switchTab('operar')" data-tab="operar" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">💱 Operar <span id="opsBadge" class="hidden ml-1 px-1.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-bold">0</span></button>
     <button onclick="switchTab('simular')" data-tab="simular" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">🎮 Simular</button>
+    <button onclick="switchTab('dcatracker')" data-tab="dcatracker" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">💎 Mi DCA</button>
     <button onclick="switchTab('market')" data-tab="market" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">📊 Mercado</button>
     <button onclick="switchTab('movers')" data-tab="movers" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">🔥 Movers</button>
     <button onclick="switchTab('watchlist')" data-tab="watchlist" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/60 text-slate-300 transition">⭐ Lista</button>
@@ -472,17 +473,48 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
 
   <!-- Dashboard -->
   <div id="simDashboard" class="hidden">
-    <!-- Stats principales -->
+    <!-- Resumen Total: 3 bloques claros -->
+    <div class="surface rounded-2xl p-3 mb-3 border-l-4 border-l-amber-500">
+      <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">📊 Resumen general</p>
+      <div class="space-y-2">
+        <!-- Total invertido en posiciones -->
+        <div class="flex items-center justify-between p-2 bg-slate-900/40 rounded-lg">
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold">💵 Total invertido</p>
+            <p class="text-[9px] text-slate-500">En monedas que tienes</p>
+          </div>
+          <p id="simTotalInvested" class="text-base font-black font-mono">$0</p>
+        </div>
+        <!-- Ganancia/pérdida total -->
+        <div id="simPLBlock" class="flex items-center justify-between p-2 rounded-lg bg-slate-900/40 border border-slate-700/50">
+          <div>
+            <p id="simPLLabel" class="text-[10px] font-bold">📊 Ganancia/Pérdida</p>
+            <p id="simPLPctText" class="text-[9px] text-slate-500">—</p>
+          </div>
+          <p id="simPL" class="text-base font-black font-mono">$0</p>
+        </div>
+        <!-- Total que tendrías si vendieras todo -->
+        <div id="simTotalBlock" class="flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/40">
+          <div>
+            <p class="text-[10px] text-amber-300 font-bold">💰 Total si vendes todo</p>
+            <p id="simTotalBreakdown" class="text-[9px] text-slate-400">—</p>
+          </div>
+          <p id="simTotalValue" class="text-xl font-black font-mono text-amber-300">$0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash y stats -->
     <div class="grid grid-cols-2 gap-2 mb-3">
-      <div class="surface rounded-2xl p-3">
-        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Cash disponible</p>
-        <p id="simBalance" class="text-xl font-black font-mono mt-1">$0</p>
+      <div class="surface rounded-xl p-2.5">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">💳 Cash libre</p>
+        <p id="simBalance" class="text-base font-black font-mono mt-1">$0</p>
         <p class="text-[10px] text-slate-500">para comprar</p>
       </div>
-      <div class="surface rounded-2xl p-3">
-        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Patrimonio total</p>
-        <p id="simTotalValue" class="text-xl font-black font-mono mt-1">$0</p>
-        <p id="simPL" class="text-[10px] font-bold font-mono">—</p>
+      <div class="surface rounded-xl p-2.5">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">🏦 Patrimonio</p>
+        <p id="simEquity" class="text-base font-black font-mono mt-1">$0</p>
+        <p class="text-[10px] text-slate-500">cash + posiciones</p>
       </div>
     </div>
 
@@ -533,6 +565,44 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
     </div>
     <input type="file" id="importFileInput" accept=".json" class="hidden">
     <p class="text-[10px] text-slate-500 mt-2 text-center leading-relaxed">💡 Exporta antes de cambiar de celular o limpiar caché del navegador para no perder tu progreso.</p>
+  </div>
+</section>
+
+<!-- ============== DCA TRACKER (mi inversión real) ============== -->
+<section id="tab-dcatracker" class="tab-content hidden">
+  <!-- Banner -->
+  <div class="surface rounded-2xl p-4 mb-3 bg-gradient-to-br from-blue-500/15 to-indigo-500/5 border border-blue-500/40">
+    <div class="flex items-start gap-3">
+      <div class="text-2xl">💎</div>
+      <div class="flex-1">
+        <h2 class="text-sm font-bold mb-1">Mi inversión DCA real</h2>
+        <p class="text-[11px] text-slate-300 leading-relaxed">Anota cada vez que compres con dinero real. Te calculo cuánto invertiste, cuánto vale ahora con precios en vivo, y proyecciones a futuro.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div id="dcaSummary" class="mb-3"></div>
+
+  <!-- Botones -->
+  <div class="grid grid-cols-1 gap-2 mb-3">
+    <button onclick="openDCABuyModal()" class="btn-primary w-full py-3.5 rounded-xl font-bold text-sm">➕ Anotar compra real</button>
+    <button onclick="testStorageNow()" class="btn-secondary w-full py-2 rounded-xl font-bold text-[11px]">🔧 Probar guardado</button>
+  </div>
+
+  <!-- Por moneda -->
+  <div id="dcaByCoin" class="space-y-2 mb-3"></div>
+
+  <!-- Proyecciones -->
+  <div id="dcaProjections" class="mb-3"></div>
+
+  <!-- Historial -->
+  <div class="mb-3">
+    <h3 class="text-xs font-bold text-slate-300 mb-2 flex items-center justify-between">
+      📜 Historial de compras
+      <button onclick="exportDCA()" class="text-[10px] text-slate-400 underline">📤 Exportar</button>
+    </h3>
+    <div id="dcaHistory" class="space-y-1.5"></div>
   </div>
 </section>
 
@@ -960,7 +1030,53 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
 </div>
 
 
-<!-- Modal compra simulada -->
+<!-- Modal DCA: Anotar compra real -->
+<div id="dcaBuyModal" class="hidden fixed inset-0 z-50 sheet-backdrop flex items-end sm:items-center justify-center">
+  <div class="sheet bg-slate-900 border-t border-slate-700 sm:border sm:rounded-2xl rounded-t-2xl p-4 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-base">💎 Anotar compra real</h3>
+      <button onclick="closeDCABuyModal()" class="text-slate-400 text-2xl leading-none w-8 h-8 flex items-center justify-center">×</button>
+    </div>
+    <p class="text-[11px] text-slate-400 mb-3">Anota lo que compraste en tu exchange (Binance, Bitget, etc.) con dinero real.</p>
+    <div class="space-y-3">
+      <div>
+        <label class="text-[10px] text-slate-400 uppercase font-bold">Moneda comprada</label>
+        <select id="dcaCoin"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[10px] text-slate-400 uppercase font-bold">USD invertidos</label>
+          <input id="dcaUSD" type="number" inputmode="decimal" step="0.01" placeholder="20.00">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-400 uppercase font-bold">Precio compra</label>
+          <input id="dcaPrice" type="number" inputmode="decimal" step="0.000001" placeholder="auto">
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-500">💡 Si dejas precio vacío, se usa el precio actual del mercado</p>
+      <div>
+        <label class="text-[10px] text-slate-400 uppercase font-bold">Fecha (opcional)</label>
+        <input id="dcaDate" type="date">
+      </div>
+      <div>
+        <label class="text-[10px] text-slate-400 uppercase font-bold">Exchange usado</label>
+        <select id="dcaExchange">
+          <option value="binance">Binance</option>
+          <option value="bitget">Bitget</option>
+          <option value="bybit">Bybit</option>
+          <option value="kraken">Kraken</option>
+          <option value="coinbase">Coinbase</option>
+          <option value="chivo">Chivo Wallet</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div id="dcaPreview" class="surface rounded-lg p-3 hidden"></div>
+      <button onclick="saveDCABuy()" class="btn-primary w-full py-3 rounded-xl text-sm">✅ Guardar compra</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="simBuyModal" class="hidden fixed inset-0 z-50 sheet-backdrop flex items-end sm:items-center justify-center">
   <div class="sheet bg-slate-900 border-t border-slate-700 sm:border sm:rounded-2xl rounded-t-2xl p-4 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
@@ -1132,12 +1248,23 @@ async function fetchWithRetry(url, retries = 3) {
 }
 
 async function loadStorage(key, defaultValue) {
-  // 1) Intentar localStorage primero (funciona en navegador real, GitHub Pages, Vercel)
+  // 1) Intentar localStorage primero
   try {
     const raw = localStorage.getItem(key);
-    if (raw !== null) return JSON.parse(raw);
-  } catch (e) { console.warn('localStorage read err', e); }
-  // 2) Fallback a window.storage (solo funciona en preview de Claude)
+    if (raw !== null && raw !== 'undefined' && raw !== 'null') {
+      const parsed = JSON.parse(raw);
+      console.log(`✓ Loaded ${key}:`, Array.isArray(parsed) ? `${parsed.length} items` : 'object');
+      return parsed;
+    }
+  } catch (e) { 
+    console.error(`❌ Error reading ${key}:`, e); 
+  }
+  // 2) Fallback a sessionStorage
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (raw !== null && raw !== 'undefined') return JSON.parse(raw);
+  } catch (e) {}
+  // 3) Fallback a window.storage (solo Claude preview)
   try {
     if (window.storage?.get) {
       const r = await window.storage.get(key);
@@ -1148,20 +1275,65 @@ async function loadStorage(key, defaultValue) {
 }
 
 async function saveStorage(key, value) {
-  // Guardar en AMBOS para máxima compatibilidad
+  let saved = false;
+  // 1) localStorage (principal)
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const json = JSON.stringify(value);
+    localStorage.setItem(key, json);
+    // Verificar que se guardó correctamente
+    const verify = localStorage.getItem(key);
+    if (verify === json) {
+      saved = true;
+      console.log(`✓ Saved ${key}`);
+    } else {
+      console.error(`❌ Verification failed for ${key}`);
+    }
   } catch (e) {
-    console.warn('localStorage write err (probable falta de espacio):', e);
-    // Si localStorage falla por cuota, intentar limpiar caché y reintentar
+    console.error(`❌ localStorage write error for ${key}:`, e);
+    // Intentar limpiar caché y reintentar
     try {
       localStorage.removeItem('cf_cache_market');
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (e2) {}
+      saved = true;
+    } catch (e2) {
+      console.error('Reintento falló:', e2);
+    }
   }
+  // 2) Backup en sessionStorage por si localStorage falla
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {}
+  // 3) Backup window.storage (Claude preview)
   try {
     if (window.storage?.set) await window.storage.set(key, JSON.stringify(value));
   } catch {}
+  return saved;
+}
+
+// Función para mostrar indicador visual de guardado
+function showSaveIndicator(success = true) {
+  const existing = document.getElementById('saveIndicator');
+  if (existing) existing.remove();
+  const ind = document.createElement('div');
+  ind.id = 'saveIndicator';
+  ind.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:bold;color:white;background:${success?'#10b981':'#ef4444'};box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:slideUp 0.3s ease-out;`;
+  ind.textContent = success ? '✓ Guardado' : '⚠️ Error al guardar';
+  document.body.appendChild(ind);
+  setTimeout(() => ind.style.opacity = '0', 1500);
+  setTimeout(() => ind.remove(), 2000);
+}
+
+// Función para verificar si localStorage funciona
+function checkStorageHealth() {
+  try {
+    const testKey = '__cf_test__';
+    localStorage.setItem(testKey, 'test');
+    const result = localStorage.getItem(testKey);
+    localStorage.removeItem(testKey);
+    return result === 'test';
+  } catch (e) {
+    return false;
+  }
 }
 
 // =================== TABS ===================
@@ -1177,6 +1349,7 @@ function switchTab(name) {
   if (name === 'trading') renderJournal();
   if (name === 'operar') renderOperar();
   if (name === 'simular') renderSim();
+  if (name === 'dcatracker') renderDCA();
   if (name === 'today') updateOpsBadge();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1664,6 +1837,7 @@ async function loadMarket() {
     detectOscillators();
     if (!$('tab-operar').classList.contains('hidden')) renderOperar();
     if (!$('tab-simular').classList.contains('hidden') && state.sim.configured) renderSimDashboard();
+    if (!$('tab-dcatracker').classList.contains('hidden')) renderDCA();
     updateOpsBadge();
     checkOpenOpsTargets();
     scanForOpportunities();
@@ -3387,17 +3561,63 @@ async function confirmResetSim() {
 
 function renderSimDashboard() {
   // Stats principales
-  const totalValue = state.sim.balance + Object.entries(state.sim.holdings).reduce((sum, [coinId, h]) => {
+  const totalInvestedInPositions = Object.values(state.sim.holdings).reduce((s, h) => s + h.totalCost, 0);
+  const fee = getSimFee();
+  const positionsCurrentNet = Object.entries(state.sim.holdings).reduce((sum, [coinId, h]) => {
     const coin = state.coins.find(c => c.id === coinId);
-    return sum + (coin ? h.qty * coin.current_price : h.totalCost);
+    const cur = coin ? coin.current_price : h.avgPrice;
+    return sum + (h.qty * cur) * (1 - fee / 200);
   }, 0);
+  const positionsPL = positionsCurrentNet - totalInvestedInPositions;
+  const positionsPLPct = totalInvestedInPositions > 0 ? (positionsPL / totalInvestedInPositions) * 100 : 0;
+  const totalValue = state.sim.balance + positionsCurrentNet;
   const totalPL = totalValue - state.sim.initialBalance;
   const totalPLPct = (totalPL / state.sim.initialBalance) * 100;
 
+  // Cash y patrimonio
   $('simBalance').textContent = fmt(state.sim.balance);
-  $('simTotalValue').textContent = fmt(totalValue);
-  $('simPL').textContent = `${totalPL >= 0 ? '+' : ''}${fmt(totalPL)} (${fmtPct(totalPLPct)})`;
-  $('simPL').className = `text-[10px] font-bold font-mono ${colorPct(totalPL)}`;
+  $('simEquity').textContent = fmt(totalValue);
+
+  // Bloque 1: Total invertido en posiciones
+  $('simTotalInvested').textContent = fmt(totalInvestedInPositions);
+
+  // Bloque 2: Ganancia/Pérdida con colores
+  const isProfit = positionsPL >= 0;
+  const plBlock = $('simPLBlock');
+  if (totalInvestedInPositions === 0) {
+    $('simPL').textContent = '$0.00';
+    $('simPL').className = 'text-base font-black font-mono text-slate-400';
+    $('simPLLabel').textContent = '📊 Sin posiciones aún';
+    $('simPLLabel').className = 'text-[10px] font-bold text-slate-400';
+    $('simPLPctText').textContent = 'Compra una moneda para empezar';
+    plBlock.className = 'flex items-center justify-between p-2 rounded-lg bg-slate-900/40 border border-slate-700/50';
+  } else {
+    $('simPL').textContent = (isProfit ? '+' : '') + fmt(positionsPL);
+    $('simPL').className = 'text-base font-black font-mono ' + (isProfit ? 'text-green-400' : 'text-red-400');
+    $('simPLLabel').textContent = isProfit ? '📈 Ganancia actual' : '📉 Pérdida actual';
+    $('simPLLabel').className = 'text-[10px] font-bold ' + (isProfit ? 'text-green-400' : 'text-red-400');
+    $('simPLPctText').textContent = `${fmtPct(positionsPLPct)} sobre lo invertido`;
+    plBlock.className = 'flex items-center justify-between p-2 rounded-lg ' + (isProfit ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30');
+  }
+
+  // Bloque 3: Total si vendes todo
+  const totalIfSellAll = state.sim.balance + positionsCurrentNet;
+  $('simTotalValue').textContent = fmt(totalIfSellAll);
+  if (totalInvestedInPositions === 0) {
+    $('simTotalBreakdown').textContent = `Cash disponible (sin posiciones)`;
+    $('simTotalBlock').className = 'flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/40';
+    $('simTotalValue').className = 'text-xl font-black font-mono text-amber-300';
+  } else {
+    const sign = isProfit ? '+' : '−';
+    $('simTotalBreakdown').textContent = `Cash ${fmt(state.sim.balance)} + invertido ${fmt(totalInvestedInPositions)} ${sign} ${fmt(Math.abs(positionsPL))}`;
+    if (isProfit) {
+      $('simTotalBlock').className = 'flex items-center justify-between p-2.5 rounded-lg bg-green-500/15 border border-green-500/40';
+      $('simTotalValue').className = 'text-xl font-black font-mono text-green-400';
+    } else {
+      $('simTotalBlock').className = 'flex items-center justify-between p-2.5 rounded-lg bg-red-500/15 border border-red-500/40';
+      $('simTotalValue').className = 'text-xl font-black font-mono text-red-400';
+    }
+  }
 
   $('simTradeCount').textContent = state.sim.trades.length;
   const sells = state.sim.trades.filter(t => t.type === 'sell');
@@ -3430,22 +3650,62 @@ function renderSimDashboard() {
       const pl = sellNet - h.totalCost;
       const plPct = (pl / h.totalCost) * 100;
       const change = ((cur - h.avgPrice) / h.avgPrice) * 100;
-      return `<div class="surface rounded-xl p-3 fade-in">
-        <div class="flex items-center gap-2.5 mb-2">
+      const isProfit = pl >= 0;
+      const totalNeto = h.totalCost + pl; // Lo que tendrías si vendieras ahora
+      // Estado visual del card
+      const cardBorder = isProfit ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500';
+      const plBg = isProfit ? 'bg-green-500/10' : 'bg-red-500/10';
+      const plBorderColor = isProfit ? 'border-green-500/30' : 'border-red-500/30';
+      const totalBg = isProfit ? 'bg-green-500/15' : 'bg-red-500/15';
+      const totalBorder = isProfit ? 'border-green-500/40' : 'border-red-500/40';
+      const totalColor = isProfit ? 'text-green-400' : 'text-red-400';
+
+      return `<div class="surface rounded-xl p-3 fade-in ${cardBorder}">
+        <!-- Encabezado: imagen, nombre, precio actual -->
+        <div class="flex items-center gap-2.5 mb-3">
           <img src="${h.coinImage}" class="w-9 h-9 rounded-full">
           <div class="flex-1 min-w-0">
             <p class="font-bold text-sm truncate">${h.coinName}</p>
             <p class="text-[10px] text-slate-500">${h.qty.toFixed(6)} ${h.coinSymbol} @ ${fmt(h.avgPrice)} prom</p>
           </div>
           <div class="text-right">
-            <p class="text-sm font-bold font-mono">${fmt(curValue)}</p>
+            <p class="text-[9px] text-slate-500 uppercase font-bold">Precio</p>
+            <p class="text-xs font-bold font-mono">${fmt(cur)}</p>
             <p class="text-[10px] font-mono ${colorPct(change)}">${fmtPct(change)}</p>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 mb-2 text-[10px]">
-          <div class="bg-slate-900/40 rounded p-1.5"><p class="text-slate-500">Si vendes ahora</p><p class="font-mono font-bold ${colorPct(pl)}">${pl >= 0 ? '+' : ''}${fmt(pl)} neto</p></div>
-          <div class="bg-slate-900/40 rounded p-1.5"><p class="text-slate-500">Rendimiento</p><p class="font-mono font-bold ${colorPct(plPct)}">${fmtPct(plPct)}</p></div>
+
+        <!-- Bloque 1: INVERTIDO -->
+        <div class="bg-slate-900/60 border border-slate-700/50 rounded-lg p-2.5 mb-2 flex items-center justify-between">
+          <div>
+            <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">💵 Invertido</p>
+            <p class="text-[10px] text-slate-500">Lo que pusiste</p>
+          </div>
+          <p class="text-lg font-black font-mono text-slate-100">${fmt(h.totalCost)}</p>
         </div>
+
+        <!-- Bloque 2: GANANCIA O PÉRDIDA (separada y bien marcada) -->
+        <div class="${plBg} border ${plBorderColor} rounded-lg p-2.5 mb-2 flex items-center justify-between">
+          <div>
+            <p class="text-[9px] uppercase font-bold tracking-wider ${totalColor}">${isProfit ? '📈 Ganancia' : '📉 Pérdida'}</p>
+            <p class="text-[10px] text-slate-500">${isProfit ? 'A favor tuyo' : 'En contra'} · ${fmtPct(plPct)}</p>
+          </div>
+          <p class="text-lg font-black font-mono ${totalColor}">${isProfit ? '+' : ''}${fmt(pl)}</p>
+        </div>
+
+        <!-- Bloque 3: TOTAL NETO (lo que recibirías si vendieras ahora) -->
+        <div class="${totalBg} border ${totalBorder} rounded-lg p-3 mb-2 flex items-center justify-between">
+          <div>
+            <p class="text-[9px] uppercase font-bold tracking-wider ${totalColor}">💰 Si vendes ahora</p>
+            <p class="text-[10px] text-slate-400">Recibes neto en tu cash</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xl font-black font-mono ${totalColor}">${fmt(totalNeto)}</p>
+            <p class="text-[10px] text-slate-500 font-mono">= ${fmt(h.totalCost)} ${isProfit ? '+' : '−'} ${fmt(Math.abs(pl))}</p>
+          </div>
+        </div>
+
+        <!-- Botones -->
         <div class="grid grid-cols-2 gap-2">
           <button onclick="openSimSellModal('${coinId}')" class="btn-sell py-2 rounded-lg text-[11px] font-bold">💸 Vender</button>
           <button onclick="analyzeCoin('${coinId}')" class="btn-secondary py-2 rounded-lg text-[11px] font-bold">📊 Análisis</button>
@@ -3757,10 +4017,484 @@ function importAllData() {
   input.click();
 }
 
+// =================== DCA TRACKER (INVERSIÓN REAL) ===================
+state.dca = { buys: [] }; // array de {id, coinId, coinName, coinSymbol, coinImage, usd, price, qty, date, exchange}
+
+async function loadDCA() {
+  state.dca.buys = await loadStorage('cf_dca', []);
+}
+async function saveDCA() {
+  await saveStorage('cf_dca', state.dca.buys);
+}
+
+function renderDCA() {
+  // Primero verificar que el storage funciona
+  const storageOK = checkStorageHealth();
+  const warningEl = document.getElementById('dcaStorageWarning');
+  if (!storageOK) {
+    if (!warningEl) {
+      const warning = document.createElement('div');
+      warning.id = 'dcaStorageWarning';
+      warning.style.cssText = 'background:#dc2626;color:white;padding:12px;border-radius:12px;margin-bottom:12px;font-size:12px;';
+      warning.innerHTML = '⚠️ <b>PROBLEMA:</b> El navegador NO permite guardar datos.<br><br>Posibles causas:<br>• Estás en modo incógnito<br>• Abriste un archivo descargado (no la URL de GitHub)<br>• Almacenamiento bloqueado por configuración<br><br><b>Solución:</b> Abrí la URL <b>https://csantos2017.github.io/cryptoflow/</b> en Chrome normal (no incógnito).';
+      const summary = document.getElementById('dcaSummary');
+      if (summary) summary.parentNode.insertBefore(warning, summary);
+    }
+  } else if (warningEl) {
+    warningEl.remove();
+  }
+  renderDCASummary();
+  renderDCAByCoin();
+  renderDCAProjections();
+  renderDCAHistory();
+}
+
+function renderDCASummary() {
+  const buys = state.dca.buys;
+  if (buys.length === 0) {
+    $('dcaSummary').innerHTML = `<div class="surface rounded-2xl p-6 text-center">
+      <p class="text-3xl mb-2">💎</p>
+      <p class="text-sm font-bold mb-1">Aún no has anotado compras</p>
+      <p class="text-[11px] text-slate-400">Toca el botón de abajo para empezar a trackear tu DCA real</p>
+    </div>`;
+    return;
+  }
+
+  // Calcular totales
+  const totalInvested = buys.reduce((s, b) => s + b.usd, 0);
+  let totalCurrentValue = 0;
+  buys.forEach(b => {
+    const coin = state.coins.find(c => c.id === b.coinId);
+    const cur = coin ? coin.current_price : b.price;
+    totalCurrentValue += b.qty * cur;
+  });
+  const pl = totalCurrentValue - totalInvested;
+  const plPct = (pl / totalInvested) * 100;
+  const isProfit = pl >= 0;
+
+  // Estadísticas adicionales
+  const firstBuy = buys.reduce((min, b) => b.date < min.date ? b : min);
+  const daysSinceFirst = Math.max(1, Math.floor((Date.now() - new Date(firstBuy.date).getTime()) / (1000 * 60 * 60 * 24)));
+  const weeksSinceFirst = Math.max(1, Math.floor(daysSinceFirst / 7));
+  const avgWeeklyInvestment = totalInvested / weeksSinceFirst;
+
+  $('dcaSummary').innerHTML = `
+    <div class="surface rounded-2xl p-3 mb-2 border-l-4 border-l-blue-500">
+      <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">📊 Tu inversión total</p>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between p-2 bg-slate-900/40 rounded-lg">
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold">💵 Invertido total</p>
+            <p class="text-[9px] text-slate-500">${buys.length} compras en ${daysSinceFirst} días</p>
+          </div>
+          <p class="text-base font-black font-mono">${fmt(totalInvested)}</p>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg ${isProfit ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}">
+          <div>
+            <p class="text-[10px] font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}">${isProfit ? '📈 Ganancia' : '📉 Pérdida'}</p>
+            <p class="text-[9px] text-slate-500">${fmtPct(plPct)} del invertido</p>
+          </div>
+          <p class="text-base font-black font-mono ${isProfit ? 'text-green-400' : 'text-red-400'}">${isProfit ? '+' : ''}${fmt(pl)}</p>
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-lg ${isProfit ? 'bg-green-500/15 border border-green-500/40' : 'bg-red-500/15 border border-red-500/40'}">
+          <div>
+            <p class="text-[10px] font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}">💰 Valor actual</p>
+            <p class="text-[9px] text-slate-400">${fmt(totalInvested)} ${isProfit ? '+' : '−'} ${fmt(Math.abs(pl))}</p>
+          </div>
+          <p class="text-xl font-black font-mono ${isProfit ? 'text-green-400' : 'text-red-400'}">${fmt(totalCurrentValue)}</p>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="surface rounded-lg p-2 text-center">
+        <p class="text-[9px] text-slate-500 uppercase font-bold">Promedio/sem</p>
+        <p class="text-sm font-black font-mono mt-0.5">${fmt(avgWeeklyInvestment)}</p>
+      </div>
+      <div class="surface rounded-lg p-2 text-center">
+        <p class="text-[9px] text-slate-500 uppercase font-bold">Compras</p>
+        <p class="text-sm font-black font-mono mt-0.5">${buys.length}</p>
+      </div>
+      <div class="surface rounded-lg p-2 text-center">
+        <p class="text-[9px] text-slate-500 uppercase font-bold">Días</p>
+        <p class="text-sm font-black font-mono mt-0.5">${daysSinceFirst}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderDCAByCoin() {
+  const buys = state.dca.buys;
+  if (buys.length === 0) { $('dcaByCoin').innerHTML = ''; return; }
+
+  // Agrupar por moneda
+  const byCoin = {};
+  buys.forEach(b => {
+    if (!byCoin[b.coinId]) byCoin[b.coinId] = { ...b, totalUSD: 0, totalQty: 0, count: 0, totalCost: 0 };
+    byCoin[b.coinId].totalUSD += b.usd;
+    byCoin[b.coinId].totalQty += b.qty;
+    byCoin[b.coinId].totalCost += b.usd;
+    byCoin[b.coinId].count++;
+  });
+
+  $('dcaByCoin').innerHTML = `<h3 class="text-xs font-bold text-slate-300 mb-2">🪙 Por moneda</h3>` +
+    Object.values(byCoin).map(c => {
+      const coin = state.coins.find(x => x.id === c.coinId);
+      const cur = coin ? coin.current_price : c.price;
+      const avgPrice = c.totalUSD / c.totalQty;
+      const currentValue = c.totalQty * cur;
+      const pl = currentValue - c.totalUSD;
+      const plPct = (pl / c.totalUSD) * 100;
+      const isProfit = pl >= 0;
+      const priceChange = ((cur - avgPrice) / avgPrice) * 100;
+
+      return `<div class="surface rounded-xl p-3 ${isProfit ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}">
+        <div class="flex items-center gap-2.5 mb-2">
+          <img src="${c.coinImage}" class="w-9 h-9 rounded-full">
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm truncate">${c.coinName}</p>
+            <p class="text-[10px] text-slate-500">${c.totalQty.toFixed(8)} ${c.coinSymbol} · ${c.count} compras</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[9px] text-slate-500 uppercase font-bold">Precio hoy</p>
+            <p class="text-xs font-bold font-mono">${fmt(cur)}</p>
+            <p class="text-[10px] font-mono ${colorPct(priceChange)}">${fmtPct(priceChange)} vs prom.</p>
+          </div>
+        </div>
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex justify-between p-1.5 bg-slate-900/40 rounded">
+            <span class="text-slate-400">💵 Invertido</span>
+            <span class="font-mono font-bold">${fmt(c.totalUSD)}</span>
+          </div>
+          <div class="flex justify-between p-1.5 bg-slate-900/40 rounded">
+            <span class="text-slate-400">📊 Precio promedio</span>
+            <span class="font-mono">${fmt(avgPrice)}</span>
+          </div>
+          <div class="flex justify-between p-1.5 rounded ${isProfit ? 'bg-green-500/10' : 'bg-red-500/10'}">
+            <span class="${isProfit ? 'text-green-400' : 'text-red-400'} font-bold">${isProfit ? '📈 Ganancia' : '📉 Pérdida'}</span>
+            <span class="font-mono font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}">${isProfit ? '+' : ''}${fmt(pl)} (${fmtPct(plPct)})</span>
+          </div>
+          <div class="flex justify-between p-2 rounded ${isProfit ? 'bg-green-500/15 border border-green-500/40' : 'bg-red-500/15 border border-red-500/40'}">
+            <span class="${isProfit ? 'text-green-400' : 'text-red-400'} font-bold">💰 Valor hoy</span>
+            <span class="font-mono font-black text-base ${isProfit ? 'text-green-400' : 'text-red-400'}">${fmt(currentValue)}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function renderDCAProjections() {
+  const buys = state.dca.buys;
+  if (buys.length < 2) { $('dcaProjections').innerHTML = ''; return; }
+
+  // Calcular el ritmo de inversión
+  const totalInvested = buys.reduce((s, b) => s + b.usd, 0);
+  const firstBuy = buys.reduce((min, b) => b.date < min.date ? b : min);
+  const daysSinceFirst = Math.max(1, Math.floor((Date.now() - new Date(firstBuy.date).getTime()) / (1000 * 60 * 60 * 24)));
+  const dailyRate = totalInvested / daysSinceFirst;
+  const weeklyRate = dailyRate * 7;
+  const monthlyRate = dailyRate * 30;
+  const yearlyRate = dailyRate * 365;
+
+  // Proyecciones a 1, 3, 5 años con escenarios
+  // Escenarios basados en historial real de BTC: bear -20%, conservador +30%, normal +60%, alcista +120%
+  const projections = [];
+  for (const years of [1, 3, 5]) {
+    const futureInvestment = totalInvested + (yearlyRate * years);
+    const bear = futureInvestment * Math.pow(1 - 0.20, years);
+    const conservative = futureInvestment * Math.pow(1 + 0.30, years);
+    const normal = futureInvestment * Math.pow(1 + 0.60, years);
+    const bull = futureInvestment * Math.pow(1 + 1.20, years);
+    projections.push({ years, futureInvestment, bear, conservative, normal, bull });
+  }
+
+  $('dcaProjections').innerHTML = `<div class="surface rounded-2xl p-3">
+    <h3 class="text-xs font-bold text-slate-300 mb-2">🔮 Proyecciones (si mantienes este ritmo)</h3>
+    <p class="text-[10px] text-slate-500 mb-3">Basado en tu ritmo de ${fmt(weeklyRate)}/semana (${fmt(monthlyRate)}/mes)</p>
+    <div class="space-y-2">
+      ${projections.map(p => `
+        <details class="bg-slate-900/40 rounded-lg">
+          <summary class="p-2.5 cursor-pointer text-[12px] font-bold flex items-center justify-between">
+            <span>📅 En ${p.years} año${p.years > 1 ? 's' : ''}</span>
+            <span class="text-slate-400 font-mono text-[10px]">habrás invertido ${fmt(p.futureInvestment)}</span>
+          </summary>
+          <div class="px-2.5 pb-2.5 space-y-1 text-[10px]">
+            <div class="flex justify-between p-1.5 bg-red-500/10 rounded">
+              <span class="text-red-400">🐻 Pesimista (−20%/año)</span>
+              <span class="font-mono font-bold">${fmt(p.bear)}</span>
+            </div>
+            <div class="flex justify-between p-1.5 bg-yellow-500/10 rounded">
+              <span class="text-yellow-400">😐 Conservador (+30%/año)</span>
+              <span class="font-mono font-bold">${fmt(p.conservative)}</span>
+            </div>
+            <div class="flex justify-between p-1.5 bg-green-500/10 rounded">
+              <span class="text-green-400">📈 Normal (+60%/año histórico)</span>
+              <span class="font-mono font-bold">${fmt(p.normal)}</span>
+            </div>
+            <div class="flex justify-between p-1.5 bg-emerald-500/15 rounded border border-emerald-500/30">
+              <span class="text-emerald-300">🚀 Alcista (+120%/año)</span>
+              <span class="font-mono font-bold text-emerald-300">${fmt(p.bull)}</span>
+            </div>
+          </div>
+        </details>
+      `).join('')}
+    </div>
+    <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">⚠️ Las proyecciones NO son garantía. Bitcoin ha tenido caídas del 70%+ históricamente. Pero quien aguantó 4+ años sin vender, casi siempre ganó.</p>
+  </div>`;
+}
+
+function renderDCAHistory() {
+  const buys = state.dca.buys;
+  if (buys.length === 0) { $('dcaHistory').innerHTML = ''; return; }
+
+  const sorted = [...buys].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const exchangeNames = { binance: 'Binance', bitget: 'Bitget', bybit: 'Bybit', kraken: 'Kraken', coinbase: 'Coinbase', chivo: 'Chivo', otro: 'Otro' };
+
+  $('dcaHistory').innerHTML = sorted.map(b => {
+    const coin = state.coins.find(c => c.id === b.coinId);
+    const cur = coin ? coin.current_price : b.price;
+    const valueNow = b.qty * cur;
+    const pl = valueNow - b.usd;
+    const plPct = (pl / b.usd) * 100;
+    const isProfit = pl >= 0;
+    const dateStr = new Date(b.date).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `<div class="surface rounded-lg p-2.5 fade-in">
+      <div class="flex items-center gap-2">
+        <img src="${b.coinImage}" class="w-7 h-7 rounded-full">
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-bold truncate">${b.coinName} <span class="text-slate-400 font-normal">${b.coinSymbol}</span></p>
+          <p class="text-[9px] text-slate-500">${dateStr} · ${exchangeNames[b.exchange] || b.exchange}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] font-bold font-mono">${fmt(b.usd)}</p>
+          <p class="text-[9px] font-mono ${colorPct(pl)}">${isProfit ? '+' : ''}${fmt(pl)} (${fmtPct(plPct)})</p>
+        </div>
+        <button onclick="deleteDCABuy(${b.id})" class="p-1 text-slate-400 active:text-red-400">🗑</button>
+      </div>
+      <p class="text-[9px] text-slate-500 mt-1 font-mono">${b.qty.toFixed(8)} × ${fmt(b.price)} → vale hoy ${fmt(valueNow)}</p>
+    </div>`;
+  }).join('');
+}
+
+function openDCABuyModal() {
+  if (state.coins.length === 0) { toast('Espera que cargue el mercado', 'warning'); return; }
+  $('dcaBuyModal').classList.remove('hidden');
+  $('dcaUSD').value = '';
+  $('dcaPrice').value = '';
+  $('dcaDate').value = new Date().toISOString().split('T')[0];
+  $('dcaExchange').value = 'binance';
+
+  // Poblar opciones - prioridad BTC y ETH
+  const popular = state.coins.filter(c => ['bitcoin', 'ethereum'].includes(c.id));
+  const others = state.coins.filter(c => !['bitcoin', 'ethereum'].includes(c.id)).slice(0, 30);
+  const opts = [...popular, ...others].map(c => `<option value="${c.id}">${c.name} (${c.symbol.toUpperCase()}) · ${fmt(c.current_price)}</option>`).join('');
+  $('dcaCoin').innerHTML = opts;
+
+  $('dcaUSD').oninput = updateDCAPreview;
+  $('dcaPrice').oninput = updateDCAPreview;
+  $('dcaCoin').onchange = updateDCAPreview;
+  updateDCAPreview();
+}
+
+function closeDCABuyModal() { $('dcaBuyModal').classList.add('hidden'); }
+
+function updateDCAPreview() {
+  const usd = parseFloat($('dcaUSD').value);
+  const coinId = $('dcaCoin').value;
+  let price = parseFloat($('dcaPrice').value);
+  const coin = state.coins.find(c => c.id === coinId);
+  if (!coin) return;
+  if (!price) price = coin.current_price;
+  if (!usd || usd <= 0) { $('dcaPreview').classList.add('hidden'); return; }
+
+  const qty = usd / price;
+  $('dcaPreview').classList.remove('hidden');
+  $('dcaPreview').innerHTML = `
+    <p class="text-[10px] text-slate-400 uppercase font-bold mb-2">Vista previa</p>
+    <div class="space-y-1 text-[11px]">
+      <div class="flex justify-between"><span class="text-slate-400">Recibirás</span><span class="font-mono font-bold">${qty.toFixed(8)} ${coin.symbol.toUpperCase()}</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">A precio</span><span class="font-mono">${fmt(price)}</span></div>
+      <div class="flex justify-between border-t border-slate-700 pt-1"><span class="text-slate-300">Inversión</span><span class="font-mono font-bold">${fmt(usd)}</span></div>
+    </div>
+  `;
+}
+
+async function saveDCABuy() {
+  const coinId = $('dcaCoin').value;
+  const usd = parseFloat($('dcaUSD').value);
+  let price = parseFloat($('dcaPrice').value);
+  const date = $('dcaDate').value || new Date().toISOString().split('T')[0];
+  const exchange = $('dcaExchange').value;
+
+  if (!coinId || !usd || usd <= 0) { toast('Falta moneda o cantidad', 'error'); return; }
+  const coin = state.coins.find(c => c.id === coinId);
+  if (!coin) { toast('Moneda no encontrada', 'error'); return; }
+
+  if (!price) price = coin.current_price;
+  const qty = usd / price;
+
+  // Asegurar que state.dca.buys es un array
+  if (!Array.isArray(state.dca.buys)) state.dca.buys = [];
+
+  state.dca.buys.push({
+    id: Date.now(),
+    coinId, coinName: coin.name, coinSymbol: coin.symbol.toUpperCase(), coinImage: coin.image,
+    usd, price, qty, date, exchange,
+    timestamp: Date.now()
+  });
+  
+  const saved = await saveDCA();
+  
+  // Verificar que se guardó correctamente leyendo de localStorage
+  const verified = await loadStorage('cf_dca', null);
+  const wasReallySaved = Array.isArray(verified) && verified.some(b => b.id === state.dca.buys[state.dca.buys.length-1].id);
+  
+  closeDCABuyModal();
+  renderDCA();
+  vibrate([50, 30, 50]);
+  
+  if (wasReallySaved) {
+    showSaveIndicator(true);
+    toast(`✅ Compra GUARDADA: ${qty.toFixed(8)} ${coin.symbol.toUpperCase()} por ${fmt(usd)}`, 'success', 4000);
+  } else {
+    showSaveIndicator(false);
+    toast(`⚠️ Compra anotada pero NO se guardó. Tu navegador no permite guardar datos. Lee abajo.`, 'error', 8000);
+    setTimeout(() => {
+      alert('PROBLEMA DE GUARDADO DETECTADO:\n\n1. Asegurate de NO estar en modo incógnito\n2. Abrí la app desde el ícono instalado, NO desde Chrome\n3. URL debe ser https://csantos2017.github.io/cryptoflow/ (NO content://)\n4. Verificá permisos: Configuración > Apps > CryptoFlow > Almacenamiento');
+    }, 1500);
+  }
+}
+
+async function deleteDCABuy(id) {
+  vibrate(15);
+  if (!confirm('¿Borrar esta compra del historial?')) return;
+  state.dca.buys = state.dca.buys.filter(b => b.id !== id);
+  await saveDCA();
+  renderDCA();
+  toast('Compra eliminada', 'info', 1500);
+}
+
+// Diagnóstico de storage
+function testStorageNow() {
+  vibrate(15);
+  const results = [];
+  
+  // Test 1: ¿localStorage existe?
+  results.push(`localStorage existe: ${typeof localStorage !== 'undefined' ? '✅ SÍ' : '❌ NO'}`);
+  
+  // Test 2: ¿Se puede escribir?
+  let canWrite = false;
+  try {
+    localStorage.setItem('__test__', 'ok');
+    canWrite = localStorage.getItem('__test__') === 'ok';
+    localStorage.removeItem('__test__');
+  } catch(e) {}
+  results.push(`Puede escribir: ${canWrite ? '✅ SÍ' : '❌ NO'}`);
+  
+  // Test 3: URL actual
+  const url = location.href;
+  const isFile = url.startsWith('file:') || url.startsWith('content:');
+  results.push(`URL: ${url.substring(0, 50)}...`);
+  results.push(`Tipo URL: ${isFile ? '❌ ARCHIVO LOCAL (no funciona)' : '✅ HTTPS'}`);
+  
+  // Test 4: Modo incógnito (heurística)
+  results.push(`Cookies: ${navigator.cookieEnabled ? '✅' : '❌'}`);
+  
+  // Test 5: Cantidad de datos guardados
+  let totalKeys = 0;
+  let totalSize = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('cf_')) {
+        totalKeys++;
+        totalSize += (localStorage.getItem(key) || '').length;
+      }
+    }
+  } catch(e) {}
+  results.push(`Keys CF guardadas: ${totalKeys}`);
+  results.push(`Tamaño datos: ${(totalSize / 1024).toFixed(1)} KB`);
+  
+  // Test 6: Probar guardar y leer
+  try {
+    const testData = { test: true, time: Date.now() };
+    localStorage.setItem('cf_diagnostic_test', JSON.stringify(testData));
+    const read = JSON.parse(localStorage.getItem('cf_diagnostic_test'));
+    const matches = read && read.test === true;
+    results.push(`Guardar+leer: ${matches ? '✅ FUNCIONA' : '❌ FALLA'}`);
+    localStorage.removeItem('cf_diagnostic_test');
+  } catch(e) {
+    results.push(`Guardar+leer: ❌ ERROR`);
+  }
+  
+  // Mostrar resultados
+  alert('🔧 DIAGNÓSTICO DE GUARDADO\n\n' + results.join('\n') + '\n\n' + 
+    (canWrite && !isFile 
+      ? '✅ TODO FUNCIONA. Si tus compras no se ven, recargá la página (deslizá hacia abajo desde arriba) o cerrá y reabrí la app.'
+      : '❌ HAY UN PROBLEMA.\n\nSolución:\n1. Cerrá esta app\n2. Abrí Chrome (NO incógnito)\n3. Andá a https://csantos2017.github.io/cryptoflow/\n4. Tocá el menú ⋮ → Instalar app\n5. Usá ese ícono nuevo'));
+}
+
+function exportDCA() {
+  vibrate(10);
+  if (state.dca.buys.length === 0) { toast('No hay compras para exportar', 'warning'); return; }
+  const lines = ['Fecha,Moneda,Símbolo,USD,Precio,Cantidad,Exchange,Valor actual'];
+  state.dca.buys.forEach(b => {
+    const coin = state.coins.find(c => c.id === b.coinId);
+    const cur = coin ? coin.current_price : b.price;
+    const valueNow = b.qty * cur;
+    lines.push([b.date, b.coinName, b.coinSymbol, b.usd.toFixed(2), b.price.toFixed(6), b.qty.toFixed(8), b.exchange, valueNow.toFixed(2)].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dca-cryptoflow-${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📤 CSV descargado', 'success', 3000);
+}
+
 // =================== INIT ===================
 function updateClock() { $('liveClock').textContent = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
 
 async function init() {
+  // CRÍTICO: Verificar si el storage funciona ANTES de cualquier cosa
+  const storageOK = checkStorageHealth();
+  const url = location.href;
+  const isFileURL = url.startsWith('file:') || url.startsWith('content:');
+  
+  if (!storageOK || isFileURL) {
+    // Mostrar pantalla de error grande
+    document.body.innerHTML = `
+      <div style="background:#0a0e1a;color:white;min-height:100vh;padding:20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-family:system-ui;">
+        <div style="font-size:80px;margin-bottom:20px;">⚠️</div>
+        <h1 style="font-size:24px;font-weight:900;color:#ef4444;margin-bottom:16px;">Esta app NO va a guardar tus datos</h1>
+        <p style="font-size:14px;color:#94a3b8;margin-bottom:20px;line-height:1.6;max-width:400px;">
+          La estás abriendo desde un archivo local o en modo incógnito.<br>
+          <b style="color:white;">Para que funcione bien:</b>
+        </p>
+        <div style="background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px;text-align:left;max-width:400px;font-size:13px;line-height:1.8;">
+          <p>1️⃣ Abrí <b style="color:#fbbf24;">Chrome</b> (NO incógnito)</p>
+          <p>2️⃣ Andá a esta URL exacta:</p>
+          <p style="background:#0a0e1a;padding:8px;border-radius:6px;font-family:monospace;font-size:11px;color:#fbbf24;text-align:center;margin:8px 0;">https://csantos2017.github.io/cryptoflow/</p>
+          <p>3️⃣ Tocá menú <b>⋮</b> → <b>"Instalar app"</b></p>
+          <p>4️⃣ Usá ese ícono nuevo (no este)</p>
+        </div>
+        <div style="background:#fbbf24;color:#0a0e1a;padding:8px 16px;border-radius:8px;font-size:11px;font-weight:bold;">
+          URL actual: ${url.substring(0, 60)}...
+        </div>
+        <button onclick="location.href='https://csantos2017.github.io/cryptoflow/'" style="background:#10b981;color:white;border:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:bold;margin-top:24px;cursor:pointer;">
+          🚀 Ir a la URL correcta
+        </button>
+        <button onclick="document.body.innerHTML='';location.reload();" style="background:transparent;color:#64748b;border:1px solid #334155;padding:10px 20px;border-radius:12px;font-size:11px;margin-top:12px;cursor:pointer;">
+          Continuar sin guardar (no recomendado)
+        </button>
+      </div>
+    `;
+    return;
+  }
+  
   switchTab('today');
   setFilter('all');
   setAlertView('active');
@@ -3770,6 +4504,7 @@ async function init() {
   state.openOps = await loadStorage('cf_open_ops', []);
   await loadWatchdog();
   await loadSim();
+  await loadDCA();
 
   updateClock();
   setInterval(updateClock, 1000);
